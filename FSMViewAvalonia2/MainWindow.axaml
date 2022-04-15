@@ -102,6 +102,16 @@
             </ScrollViewer>
           </Grid>
         </TabItem>
+        <TabItem Header="Code">
+          <Grid Background="#ffe5e5e5">
+            <ScrollViewer>
+			  <StackPanel>
+				<MenuItem Header="View state code" IsEnabled="false" Name="switchToFull"/>
+                <TextBox IsReadOnly="true" Name="codeText"/>
+			  </StackPanel>
+            </ScrollViewer>
+          </Grid>
+        </TabItem>
       </TabControl>
     </Grid>
   </Grid>

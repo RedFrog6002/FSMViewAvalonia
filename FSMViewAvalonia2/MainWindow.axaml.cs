@@ -13,6 +13,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using FSMViewAvalonia2.CSharpConversion;
 
 namespace FSMViewAvalonia2
 {
@@ -29,6 +30,8 @@ namespace FSMViewAvalonia2
         private StackPanel stateList;
         private StackPanel eventList;
         private StackPanel variableList;
+        private TextBox codeText;
+        private MenuItem switchToFull;
         private TabControl fsmTabs;
         private MatrixTransform mt;
 
@@ -39,6 +42,8 @@ namespace FSMViewAvalonia2
         private string lastFileName;
         private List<FsmDataInstance> loadedFsmDatas;
         private bool addingTabs;
+        private bool fullCode = true;
+        private FsmStateData selection;
 
         //fsm info
         private ObservableCollection<TabItem> tabItems;
@@ -60,6 +65,8 @@ namespace FSMViewAvalonia2
             stateList = this.FindControl<StackPanel>("stateList");
             eventList = this.FindControl<StackPanel>("eventList");
             variableList = this.FindControl<StackPanel>("variableList");
+            codeText = this.FindControl<TextBox>("codeText");
+            switchToFull = this.FindControl<MenuItem>("switchToFull");
             fsmTabs = this.FindControl<TabControl>("fsmTabs");
             mt = graphCanvas.RenderTransform as MatrixTransform;
             //generated events
@@ -72,11 +79,28 @@ namespace FSMViewAvalonia2
             closeTab.Click += CloseTab_Click;
             openResources.Click += OpenResources_Click;
             openSceneList.Click += OpenSceneList_Click;
+            switchToFull.Click += SwitchToFull_Click;
             fsmTabs.SelectionChanged += FsmTabs_SelectionChanged;
 
             loadedFsmDatas = new List<FsmDataInstance>();
             tabItems = new ObservableCollection<TabItem>();
             fsmTabs.Items = tabItems;
+        }
+
+        private void SwitchToFull_Click(object sender, RoutedEventArgs e)
+        {
+            if (fullCode)
+            {
+                switchToFull.Header = "View full fsm code";
+                codeText.Text = selection.code;
+                fullCode = false;
+            }
+            else
+            {
+                switchToFull.Header = "View state code";
+                codeText.Text = fsmData.code;
+                fullCode = true;
+            }
         }
 
         private async void FileOpen_Click(object sender, RoutedEventArgs e)
@@ -114,6 +138,10 @@ namespace FSMViewAvalonia2
                 tabItems.Remove(tabItem);
                 loadedFsmDatas.Remove(fsmInst);
                 fsmInst.canvasControls.Clear();
+                selection = null;
+                switchToFull.IsEnabled = false;
+                switchToFull.Header = "View state code";
+                fullCode = true;
             }
         }
 
@@ -183,6 +211,11 @@ namespace FSMViewAvalonia2
                     fsmData = fsmDataInst;
                     mt.Matrix = fsmData.matrix;
 
+                    selection = null;
+                    switchToFull.IsEnabled = false;
+                    switchToFull.Header = "View state code";
+                    codeText.Text = fsmDataInst.code;
+
                     foreach (UINode uiNode in fsmData.nodes)
                     {
                         if (uiNode.Selected)
@@ -240,6 +273,12 @@ namespace FSMViewAvalonia2
             LoadStates();
             LoadEvents();
             LoadVariables();
+
+            codeText.Text = fsmData.code;
+            fullCode = true;
+            selection = null;
+            switchToFull.IsEnabled = false;
+            switchToFull.Header = "View state code";
         }
 
         private void LoadStates()
@@ -314,7 +353,12 @@ namespace FSMViewAvalonia2
 
         private void StateSidebarData(FsmStateData stateData)
         {
+            selection = stateData;
             stateList.Children.Clear();
+            codeText.Text = stateData.code;
+            switchToFull.IsEnabled = true;
+            switchToFull.Header = "View full fsm code";
+            fullCode = false;
             var entries = stateData.ActionData;
             for(int i = 0; i < entries.Count;i++)
             {

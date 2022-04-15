@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using FSMViewAvalonia2.CSharpConversion;
 
 namespace FSMViewAvalonia2
 {
@@ -72,6 +73,8 @@ namespace FSMViewAvalonia2
                 dataInstance.dataVersion = dataVersionField.GetValue().AsInt();
             }
 
+            FsmClassBuilder classBuilder = new FsmClassBuilder(dataInstance.goName, dataInstance.fsmName);
+
             dataInstance.states = new List<FsmStateData>();
             for (int i = 0; i < states.GetChildrenCount(); i++)
             {
@@ -83,6 +86,14 @@ namespace FSMViewAvalonia2
                 GetActionData(stateData.ActionData, stateData.state.actionData, dataInstance.dataVersion);
 
                 dataInstance.states.Add(stateData);
+
+                FsmStateBuilder stateBuilder = classBuilder.CreateState(stateData.state.name);
+
+                int actions = stateData.ActionData.Count;
+                for (int j = 0; j < actions; j++)
+                    ActionCode.WriteCodeForAction(stateBuilder, stateData.ActionData[j]);
+
+                stateData.code = stateBuilder.ToString();
             }
 
             dataInstance.events = new List<FsmEventData>();
@@ -97,6 +108,18 @@ namespace FSMViewAvalonia2
 
             dataInstance.variables = new List<FsmVariableData>();
             GetVariableValues(dataInstance.variables, namer, variables);
+
+            int variablesCount = dataInstance.variables.Count;
+            for(int i = 0; i < variablesCount; i++)
+            {
+                FsmVariableData variableData = dataInstance.variables[i];
+
+                int variablesCount2 = variableData.Values.Count;
+                for(int j = 0; j < variablesCount2; j++)
+                {
+                    classBuilder.AddField(variableData.Type, variableData.Values[j].Item1);
+                }
+            }
 
             dataInstance.globalTransitions = new List<FsmNodeData>();
             for (int i = 0; i < globalTransitions.GetChildrenCount(); i++)
@@ -114,6 +137,8 @@ namespace FSMViewAvalonia2
                 FsmNodeData node = new FsmNodeData(dataInstance, globalTransition);
                 dataInstance.globalTransitions.Add(node);
             }
+
+            dataInstance.code = classBuilder.ToString();
 
             //dataInstance.events = new List<FsmEventData>();
             //for (int i = 0; i < events.GetChildrenCount(); i++)

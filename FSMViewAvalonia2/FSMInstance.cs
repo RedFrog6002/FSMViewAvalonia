@@ -23,6 +23,7 @@ namespace FSMViewAvalonia2
         public Controls canvasControls;
         public Matrix matrix;
         public int dataVersion;
+        public string code;
     }
     public class FsmStateData
     {
@@ -30,6 +31,7 @@ namespace FSMViewAvalonia2
         public List<ActionScriptEntry> ActionData { get; set; }
         public FsmState state;
         public FsmNodeData node;
+        public string code;
     }
     public class FsmEventData
     {
