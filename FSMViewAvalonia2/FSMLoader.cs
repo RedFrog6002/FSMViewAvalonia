@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using FSMViewAvalonia2.CSharpConversion;
+using System.Linq;
 
 namespace FSMViewAvalonia2
 {
@@ -87,13 +88,7 @@ namespace FSMViewAvalonia2
 
                 dataInstance.states.Add(stateData);
 
-                FsmStateBuilder stateBuilder = classBuilder.CreateState(stateData.state.name);
-
-                int actions = stateData.ActionData.Count;
-                for (int j = 0; j < actions; j++)
-                    ActionCode.WriteCodeForAction(stateBuilder, stateData.ActionData[j]);
-
-                stateData.code = stateBuilder.ToString();
+                FsmStateBuilder stateBuilder = classBuilder.CreateState(stateData.state.name, stateData.state.transitions.FirstOrDefault(t => t.fsmEvent.name == "FINISHED")?.toState);
             }
 
             dataInstance.events = new List<FsmEventData>();
@@ -136,6 +131,19 @@ namespace FSMViewAvalonia2
 
                 FsmNodeData node = new FsmNodeData(dataInstance, globalTransition);
                 dataInstance.globalTransitions.Add(node);
+            }
+
+            int stateCount = dataInstance.states.Count;
+            for (int i = 0; i < stateCount; i++)
+            {
+                FsmStateData stateData = dataInstance.states[i];
+                int actions = stateData.ActionData.Count;
+                for (int j = 0; j < actions; j++)
+                    ActionCode.WriteCodeForAction(classBuilder.GetState(i), stateData.ActionData[j], stateData);
+            }
+            for (int i = 0; i < stateCount; i++)
+            {
+                dataInstance.states[i].code = classBuilder.GetState(i).ToString();
             }
 
             dataInstance.code = classBuilder.ToString();

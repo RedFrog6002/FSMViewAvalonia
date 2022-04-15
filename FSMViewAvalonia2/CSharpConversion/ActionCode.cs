@@ -1,29 +1,57 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
+using FSMViewAvalonia2.CSharpConversion.Actions;
 
 namespace FSMViewAvalonia2.CSharpConversion
 {
     public static class ActionCode
     {
-        public static void WriteCodeForAction(FsmStateBuilder state, ActionScriptEntry action)
+        public static void WriteCodeForAction(FsmStateBuilder state, ActionScriptEntry action, FsmStateData data)
         {
+            if (!action.Enabled)
+                return;
             switch (action.Name)
             {
                 case "CallMethodProper":
-                    string code = GetOwnerDefaultString(action.Values[0].Item2 as FsmOwnerDefault) + ".GetComponent<" + (action.Values[1].Item2 as FsmString).value + ">()." + (action.Values[2].Item2 as FsmString).value + "(";
-                    int length = action.Values.Count;
-                    for (int i = 4; i < length; i++)
-                    {
-                        if (i != 4)
-                            code += ", ";
-                        code += GetOnlyValue(action.Values[i].Item2 as FsmVar);
-                    }
-                    code += ");";
-                    state.AddMiddleCode(code);
+                    CallMethodProper.Build(state, action, data);
+                    break;
+                case "CheckGGBossLevel":
+                    CheckGGBossLevel.Build(state, action, data);
+                    break;
+                case "FindChild":
+                    FindChild.Build(state, action, data);
+                    break;
+                case "FloatCompare":
+                    FloatCompare.Build(state, action, data);
+                    break;
+                case "GetOwner":
+                    GetOwner.Build(state, action, data);
+                    break;
+                case "GetPosition":
+                    GetPosition.Build(state, action, data);
+                    break;
+                case "SetCollider":
+                    SetCollider.Build(state, action, data);
+                    break;
+                case "SetIntValue":
+                    SetIntValue.Build(state, action, data);
+                    break;
+                case "SetMeshRenderer":
+                    SetMeshRenderer.Build(state, action, data);
                     break;
                 case "SetPlayerDataInt":
-                    state.AddMiddleCode("PlayerData.instance.SetInt(" + action.Values[0].Item2 + ", " + action.Values[1].Item2 + ");");
+                    SetPlayerDataInt.Build(state, action, data);
+                    break;
+                case "SetVelocity2d":
+                    SetVelocity2d.Build(state, action, data);
+                    break;
+                case "Tk2dPlayAnimation":
+                    Tk2dPlayAnimation.Build(state, action, data);
+                    break;
+                case "Wait":
+                    Wait.Build(state, action, data);
                     break;
                 default:
                     state.AddMiddleCode(action.Name + ".DoSomething();");
@@ -31,7 +59,7 @@ namespace FSMViewAvalonia2.CSharpConversion
             }
         }
 
-        private static string GetOwnerDefaultString(FsmOwnerDefault owner)
+        public static string GetOwnerDefaultString(FsmOwnerDefault owner)
         {
             if (owner.ownerOption == OwnerDefaultOption.UseOwner)
                 return "gameObject";
@@ -44,7 +72,7 @@ namespace FSMViewAvalonia2.CSharpConversion
             }
         }
 
-        private static string GetOnlyValue(FsmVar fsmVar)
+        public static string GetOnlyValue(FsmVar fsmVar)
         {
             if (fsmVar.variableName != "")
             {
@@ -98,6 +126,11 @@ namespace FSMViewAvalonia2.CSharpConversion
                     return value.ToString();
             }
             return "null var";
+        }
+
+        public static string GetToState(FsmTransition[] transitions, string fsmEvent)
+        {
+            return transitions.First(t => t.fsmEvent.name == fsmEvent).toState;
         }
     }
 }
