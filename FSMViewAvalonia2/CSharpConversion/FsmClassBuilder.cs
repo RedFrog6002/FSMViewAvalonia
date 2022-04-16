@@ -13,6 +13,9 @@ namespace FSMViewAvalonia2.CSharpConversion
         private List<FsmStateBuilder> States = new List<FsmStateBuilder>();
         private string GOName;
         private string FSMName;
+        public bool RequireEndState { get; private set; } = false;
+
+        public void SetRequireEndState() => RequireEndState = true;
 
         public void AddField(string Type, string Name) => Fields.Add((Type, Name));
 
@@ -35,6 +38,8 @@ namespace FSMViewAvalonia2.CSharpConversion
         public override string ToString()
         {
             string ret = "public class " + GOName + "_" + FSMName + "\n{\n";
+            if (RequireEndState)
+                ret += ClassMemberSpace + "private readonly Action EndState;\n" + ClassMemberSpace + "\n";
             int length = Fields.Count;
             for (int i = 0; i < length; i++)
             {
@@ -64,7 +69,7 @@ namespace FSMViewAvalonia2.CSharpConversion
         private List<Func<string>> ReturnCode = new List<Func<string>>();
         public readonly string Name;
         private readonly string finishedMethod;
-        private readonly bool hasFinishMethod;
+        public readonly bool hasFinishMethod;
         public bool IsEnumerator { get; private set; } = false;
         public bool NormalFinish { get; private set; } = true;
 
@@ -89,46 +94,77 @@ namespace FSMViewAvalonia2.CSharpConversion
         public void AddReturnCodeAt0(Func<string> line) => ReturnCode.Insert(0, line);
 
         public void SetIsEnumerator() => IsEnumerator = true;
-        public void SetAbnormalFinish() => NormalFinish = false;
+        public void SetAbnormalFinish()
+        {
+            NormalFinish = false;
+            classBuilder.SetRequireEndState();
+        }
 
         internal FsmStateBuilder(FsmClassBuilder classBuilder, string Name, string finishedMethod)
         {
             this.classBuilder = classBuilder;
             this.Name = Name;
             this.finishedMethod = finishedMethod;
-            this.hasFinishMethod = !string.IsNullOrEmpty(finishedMethod);
+            if (string.IsNullOrEmpty(finishedMethod))
+            {
+                this.hasFinishMethod = false;
+                classBuilder.SetRequireEndState();
+            }
+            else
+                this.hasFinishMethod = true;
         }
 
         private string GetReturnCode(List<Func<string>> list, string space)
         {
             string ret = "";
-            int length = list.Count;
-            for (int i = 0; i < length; i++)
+            if (hasFinishMethod && NormalFinish)
             {
-                if (i != 0)
-                    ret += "\n" + MethodSpace;
-                ret += space + list[i]();
+                int length = list.Count;
+                for (int i = 0; i < length; i++)
+                {
+                    if (i != 0)
+                        ret += "\n" + MethodSpace;
+                    ret += space + list[i]();
+                }
+            }
+            else
+            {
+                ret += "EndState();\n" + MethodSpace + "EndState = null;";
             }
             return ret;
         }
 
-        private void WriteAllCode(ref string ret, List<Func<string>> list)
+        private void WriteAllCode(ref string ret, List<Func<string>> list, string space = MethodSpace)
         {
             int length = list.Count;
             for (int i = 0; i < length; i++)
             {
                 string add = list[i]();
                 if (add != "")
-                    ret += MethodSpace + add + "\n";
+                    ret += space + add + "\n";
             }
         }
 
         public override string ToString()
         {
             string ret = ClassMemberSpace + (IsEnumerator ? "public IEnumerator " : "public void ") + Name + "()\n" + ClassMemberSpace + "{\n";
+            if (classBuilder.RequireEndState)
+            {
+                ret += MethodSpace + "if (EndState != null)\n" + MethodSpace + "{\n" + MethodSpace + "    EndState();\n" + MethodSpace + "    EndState = null;\n" + MethodSpace + "}\n";
+                if (BeginningCode.Count > 0 || MiddleCode.Count > 0 || EndCode.Count > 0 || ReturnCode.Count > 0)
+                    ret += MethodSpace + "\n";
+            }
             if (BeginningCode.Count > 0)
             {
                 WriteAllCode(ref ret, BeginningCode);
+                if (MiddleCode.Count > 0 || EndCode.Count > 0 || ReturnCode.Count > 0)
+                    ret += MethodSpace + "\n";
+            }
+            if (ReturnCode.Count > 0 && (!hasFinishMethod || !NormalFinish))
+            {
+                ret += MethodSpace + "EndState = () =>\n" + MethodSpace + "{\n";
+                WriteAllCode(ref ret, ReturnCode, MethodSpace + "    ");
+                ret += MethodSpace + "}\n";
                 if (MiddleCode.Count > 0 || EndCode.Count > 0 || (ReturnCode.Count > 0 && hasFinishMethod && NormalFinish))
                     ret += MethodSpace + "\n";
             }
