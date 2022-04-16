@@ -8,14 +8,17 @@ namespace FSMViewAvalonia2.CSharpConversion
     public class FsmClassBuilder
     {
         private const string ClassMemberSpace = "    ";
+        private const string MethodSpace = "        ";
 
         private List<(string, string)> Fields = new List<(string, string)>();
         private List<FsmStateBuilder> States = new List<FsmStateBuilder>();
         private string GOName;
         private string FSMName;
         public bool RequireEndState { get; private set; } = false;
+        public bool ContainsCoroutine { get; private set; } = false;
 
         public void SetRequireEndState() => RequireEndState = true;
+        public void SetContainsCoroutine() => ContainsCoroutine = true;
 
         public void AddField(string Type, string Name) => Fields.Add((Type, Name));
 
@@ -39,7 +42,12 @@ namespace FSMViewAvalonia2.CSharpConversion
         {
             string ret = "public class " + GOName + "_" + FSMName + "\n{\n";
             if (RequireEndState)
-                ret += ClassMemberSpace + "private readonly Action EndState;\n" + ClassMemberSpace + "\n";
+            {
+                ret += ClassMemberSpace + "private readonly Action EndState;\n";
+                if (ContainsCoroutine)
+                    ret += ClassMemberSpace + "private readonly Coroutine ThisRoutine;\n";
+                ret += ClassMemberSpace + "\n";
+            }
             int length = Fields.Count;
             for (int i = 0; i < length; i++)
             {
@@ -51,6 +59,11 @@ namespace FSMViewAvalonia2.CSharpConversion
             {
                 ret += ClassMemberSpace + "\n" + States[i].ToString();
             }
+            if (RequireEndState)
+                ret += ClassMemberSpace + "public void BeginState()\n" + ClassMemberSpace + "{\n" + MethodSpace
+                    + "if (EndState != null)\n" + MethodSpace + "{\n" + MethodSpace + "    EndState();\n" + MethodSpace + "    EndState = null;\n" + MethodSpace + "}\n"
+                    + MethodSpace + "if (LastRoutine != null)\n" + MethodSpace + "    StopCoroutine(LastRoutine);" + MethodSpace + "LastRoutine = ThisRoutine;"
+                    + ClassMemberSpace + "}\n";
             ret += "}";
             return ret;
         }
@@ -93,7 +106,11 @@ namespace FSMViewAvalonia2.CSharpConversion
         public void AddReturnCodeAt0(string line) => ReturnCode.Insert(0, () => line);
         public void AddReturnCodeAt0(Func<string> line) => ReturnCode.Insert(0, line);
 
-        public void SetIsEnumerator() => IsEnumerator = true;
+        public void SetIsEnumerator()
+        {
+            IsEnumerator = true;
+            classBuilder.SetContainsCoroutine();
+        }
         public void SetAbnormalFinish()
         {
             NormalFinish = false;
@@ -114,7 +131,7 @@ namespace FSMViewAvalonia2.CSharpConversion
                 this.hasFinishMethod = true;
         }
 
-        private string GetReturnCode(List<Func<string>> list, string space)
+        private string GetReturnCode(List<Func<string>> list, string space = "")
         {
             string ret = "";
             if (hasFinishMethod && NormalFinish)
@@ -123,13 +140,13 @@ namespace FSMViewAvalonia2.CSharpConversion
                 for (int i = 0; i < length; i++)
                 {
                     if (i != 0)
-                        ret += "\n" + MethodSpace;
-                    ret += space + list[i]();
+                        ret += "\n" + MethodSpace + space;
+                    ret += MethodSpace + space + list[i]();
                 }
             }
             else
             {
-                ret += "EndState();\n" + MethodSpace + "EndState = null;";
+                ret += "EndState();\n" + MethodSpace + space + "EndState = null;";
             }
             return ret;
         }
@@ -145,12 +162,29 @@ namespace FSMViewAvalonia2.CSharpConversion
             }
         }
 
+        public string MakeCall(string space = "")
+        {
+            if (IsEnumerator)
+            {
+                if (classBuilder.RequireEndState)
+                    return space + "ThisRoutine = StartCoroutine(" + Name + "());";
+                return space + "StartCoroutine(" + Name + "());";
+            }
+            return space + Name + "();";
+        }
+
+        public string MakeReturn(string space = "")
+        {
+            if (IsEnumerator)
+                return space + "yield break;";
+            return space + "return;";
+        }
+
         public override string ToString()
         {
             string ret = ClassMemberSpace + (IsEnumerator ? "public IEnumerator " : "public void ") + Name + "()\n" + ClassMemberSpace + "{\n";
             if (classBuilder.RequireEndState)
             {
-                ret += MethodSpace + "if (EndState != null)\n" + MethodSpace + "{\n" + MethodSpace + "    EndState();\n" + MethodSpace + "    EndState = null;\n" + MethodSpace + "}\n";
                 if (BeginningCode.Count > 0 || MiddleCode.Count > 0 || EndCode.Count > 0 || ReturnCode.Count > 0)
                     ret += MethodSpace + "\n";
             }
@@ -186,7 +220,7 @@ namespace FSMViewAvalonia2.CSharpConversion
                 {
                     WriteAllCode(ref ret, ReturnCode);
                 }
-                ret += MethodSpace + (classBuilder.GetState(finishedMethod).IsEnumerator ? ("StartCoroutine(" + finishedMethod + "());\n") : (finishedMethod + "();\n"));
+                ret += MethodSpace + classBuilder.GetState(finishedMethod).MakeCall();
             }
             ret += ClassMemberSpace + "}\n";
             return ret;

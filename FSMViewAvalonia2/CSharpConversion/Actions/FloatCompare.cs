@@ -44,8 +44,8 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                     state.AddMiddleCode("        if (Mathf.Abs(" + float1String + " - " + float2String + ") <= " + toleranceString + ")");
                     state.AddMiddleCode("        {");
                     state.AddMiddleCodeReturn("            ");
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? ("            StartCoroutine(" + toState + "());") : ("            " + toState + "();"));
-                    state.AddMiddleCode("            yield break;");
+                    state.AddMiddleCode(() => toStateBuilder.MakeCall("            "));
+                    state.AddMiddleCode(() => state.MakeReturn("            "));
                     state.AddMiddleCode("        }");
                 }
                 if (!string.IsNullOrEmpty(lessThan))
@@ -55,8 +55,8 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                     state.AddMiddleCode("        if (" + float1String + " < " + float2String + ")");
                     state.AddMiddleCode("        {");
                     state.AddMiddleCodeReturn("            ");
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? ("            StartCoroutine(" + toState + "());") : ("            " + toState + "();"));
-                    state.AddMiddleCode("            yield break;");
+                    state.AddMiddleCode(() => toStateBuilder.MakeCall("            "));
+                    state.AddMiddleCode(() => state.MakeReturn("            "));
                     state.AddMiddleCode("        }");
                 }
                 if (!string.IsNullOrEmpty(greaterThan))
@@ -66,8 +66,8 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                     state.AddMiddleCode("        if (" + float1String + " > " + float2String + ")");
                     state.AddMiddleCode("        {");
                     state.AddMiddleCodeReturn("            ");
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? ("            StartCoroutine(" + toState + "());") : ("            " + toState + "();"));
-                    state.AddMiddleCode("            yield break;");
+                    state.AddMiddleCode(() => toStateBuilder.MakeCall("            "));
+                    state.AddMiddleCode(() => state.MakeReturn("            "));
                     state.AddMiddleCode("        }");
                 }
                 state.AddMiddleCode("        yield return null;");
@@ -85,8 +85,8 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                     state.AddMiddleCode("if (Mathf.Abs(" + float1String + " - " + float2String + ") <= " + toleranceString + ")");
                     state.AddMiddleCode("{");
                     state.AddMiddleCodeReturn("    ");
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? ("    StartCoroutine(" + toState + "());") : ("    " + toState + "();"));
-                    state.AddMiddleCode(() => state.IsEnumerator ? "    yield break;" : "    return;");
+                    state.AddMiddleCode(() => toStateBuilder.MakeCall("    "));
+                    state.AddMiddleCode(() => state.MakeReturn("    "));
                     state.AddMiddleCode("}");
                 }
                 if (!string.IsNullOrEmpty(lessThan))
@@ -96,8 +96,8 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                     state.AddMiddleCode("if (" + float1String + " < " + float2String + ")");
                     state.AddMiddleCode("{");
                     state.AddMiddleCodeReturn("    ");
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? ("    StartCoroutine(" + toState + "());") : ("    " + toState + "();"));
-                    state.AddMiddleCode(() => state.IsEnumerator ? "    yield break;" : "    return;");
+                    state.AddMiddleCode(() => toStateBuilder.MakeCall("    "));
+                    state.AddMiddleCode(() => state.MakeReturn("    "));
                     state.AddMiddleCode("}");
                 }
                 if (!string.IsNullOrEmpty(greaterThan))
@@ -107,8 +107,8 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                     state.AddMiddleCode("if (" + float1String + " > " + float2String + ")");
                     state.AddMiddleCode("{");
                     state.AddMiddleCodeReturn("    ");
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? ("    StartCoroutine(" + toState + "());") : ("    " + toState + "();"));
-                    state.AddMiddleCode(() => state.IsEnumerator ? "    yield break;" : "    return;");
+                    state.AddMiddleCode(() => toStateBuilder.MakeCall("    "));
+                    state.AddMiddleCode(() => state.MakeReturn("    "));
                     state.AddMiddleCode("}");
                 }
             }

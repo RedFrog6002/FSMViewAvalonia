@@ -24,8 +24,8 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                     FsmStateBuilder toStateBuilder = state.classBuilder.GetState(toState);
                     state.AddMiddleCode("        case 0:");
                     state.AddMiddleCodeReturn("            ");
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? ("            StartCoroutine(" + toState + "());") : ("            " + toState + "();"));
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? "            yield break;" : "            return;");
+                    state.AddMiddleCode(() => toStateBuilder.MakeCall("            "));
+                    state.AddMiddleCode(() => state.MakeReturn("            "));
                 }
                 if (level2 != "")
                 {
@@ -33,8 +33,8 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                     FsmStateBuilder toStateBuilder = state.classBuilder.GetState(toState);
                     state.AddMiddleCode("        case 1:");
                     state.AddMiddleCodeReturn("            ");
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? ("            StartCoroutine(" + toState + "());") : ("            " + toState + "();"));
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? "            yield break;" : "            return;");
+                    state.AddMiddleCode(() => toStateBuilder.MakeCall("            "));
+                    state.AddMiddleCode(() => state.MakeReturn("            "));
                 }
                 if (level3 != "")
                 {
@@ -42,8 +42,8 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                     FsmStateBuilder toStateBuilder = state.classBuilder.GetState(toState);
                     state.AddMiddleCode("        case 2:");
                     state.AddMiddleCodeReturn("            ");
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? ("            StartCoroutine(" + toState + "());") : ("            " + toState + "();"));
-                    state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? "            yield break;" : "            return;");
+                    state.AddMiddleCode(() => toStateBuilder.MakeCall("            "));
+                    state.AddMiddleCode(() => state.MakeReturn("            "));
                 }
                 state.AddMiddleCode("}");
             }
@@ -57,9 +57,9 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                     state.AddMiddleCode("if (!BossSceneController.instance)");
                 state.AddMiddleCode("{");
                 state.AddMiddleCodeReturn("    ");
-                state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? ("    StartCoroutine(" + toState + "());") : ("    " + toState + "();"));
-                state.AddMiddleCode(() => toStateBuilder.IsEnumerator ? "    yield break;" : "    return;");
-                state.AddMiddleCode("}");
+                state.AddMiddleCode(() => toStateBuilder.MakeCall("    "));
+                state.AddMiddleCode(() => state.IsEnumerator ? "    yield break;" : "    return;");
+                state.AddMiddleCode(() => state.MakeReturn("    "));
             }
         }
     }

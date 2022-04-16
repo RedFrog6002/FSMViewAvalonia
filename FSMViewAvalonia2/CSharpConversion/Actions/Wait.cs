@@ -19,7 +19,7 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
             else
                 state.AddEndCode("yield return new WaitForSeconds(" + time.value + ");");
             state.AddEndCodeReturn("");
-            state.AddEndCode(() => toStateBuilder.IsEnumerator ? ("StartCoroutine(" + toState + "());") : (toState + "();"));
+            state.AddEndCode(() => toStateBuilder.MakeCall());
             state.SetIsEnumerator();
             state.SetAbnormalFinish();
         }
