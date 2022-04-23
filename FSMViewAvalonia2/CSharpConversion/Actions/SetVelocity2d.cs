@@ -104,7 +104,7 @@ namespace FSMViewAvalonia2.CSharpConversion.Actions
                 state.AddMiddleCode("    while (true)");
                 state.AddMiddleCode("    {");
                 state.AddMiddleCode("        rb2d.velocity = " + vectorText + ";");
-                state.AddMiddleCode("        yield return null;");
+                state.AddMiddleCode("        yield return new WaitForFixedUpdate();");
                 state.AddMiddleCode("    }");
                 state.AddMiddleCode("}");
                 state.AddMiddleCode("SetVelocity2DEveryFrame = StartCoroutine(SetVelocity2DEveryFrameRoutine());");

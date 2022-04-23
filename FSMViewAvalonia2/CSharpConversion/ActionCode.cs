@@ -53,8 +53,11 @@ namespace FSMViewAvalonia2.CSharpConversion
                 case "Wait":
                     Wait.Build(state, action, data);
                     break;
+                case "WorldToScreenPoint":
+                    WorldToScreenPoint.Build(state, action, data);
+                    break;
                 default:
-                    state.AddMiddleCode(action.Name + ".DoSomething();");
+                    state.AddMiddleCode(action.Name + ".DoSomething(); // Unimplimented Action Type");
                     break;
             }
         }
